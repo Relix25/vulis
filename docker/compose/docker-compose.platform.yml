@@ -1,0 +1,183 @@
+# Vulis — platform compose (M1.2)
+#
+# Production-like local stack. Includes:
+#   - Postgres 16 (metadata store)
+#   - Redis 7    (cache / locks)
+#   - Mosquitto 2 (MQTT 5, user/pass auth, Sparkplug-ready)
+#   - Keycloak 25 (OIDC, dev "vulis" realm imported on first boot)
+#   - Traefik 3  (reverse proxy + dev dashboard)
+#   - Alembic    (one-shot schema migration, profile "platform")
+#
+# Usage:
+#   cp docker/compose/.env.example docker/compose/.env   # then edit
+#   task up:platform           # boots everything, runs migrations, smoke tests
+#   task logs:platform         # tail logs
+#   task ps:platform           # show container status
+#   task down:platform         # stop (keep volumes)
+#   task down:platform-v       # stop + delete volumes (DESTRUCTIVE)
+#
+# This file is INTENTIONALLY separate from docker-compose.dev.yml.
+# dev  = fast, anonymous, no Traefik, no alembic
+# plat = realistic, auth, Traefik, full migration workflow
+
+name: vulis-platform
+
+services:
+
+  # ─── PostgreSQL: metadata store ───────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vulis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-vulis}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres-platform-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER:-vulis} -d ${POSTGRES_DB:-vulis}
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # ─── Redis: cache / locks ─────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --save
+      - "60"
+      - "1"
+      - --loglevel
+      - warning
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis-platform-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # ─── Mosquitto: MQTT 5 broker (Sparkplug-ready, user/pass) ────
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/mosquitto/config/entrypoint.sh"]
+    command: []
+    ports:
+      - "${MQTT_HOST_PORT:-1883}:1883"
+      - "${MQTT_WS_HOST_PORT:-9001}:9001"
+    volumes:
+      - ./mosquitto/mosquitto-platform.conf:/mosquitto/config/mosquitto-platform.conf:ro
+      - ./mosquitto/entrypoint.sh:/mosquitto/config/entrypoint.sh:ro
+      - mosquitto-platform-data:/mosquitto/data
+      - mosquitto-platform-log:/mosquitto/log
+    environment:
+      VULIS_MQTT_USER: ${MQTT_USER:?MQTT_USER must be set in .env}
+      VULIS_MQTT_PASS: ${MQTT_PASSWORD:?MQTT_PASSWORD must be set in .env}
+    healthcheck:
+      # Mosquitto 2 has no native healthcheck; just probe the port.
+      test:
+        - CMD-SHELL
+        - timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/1883' || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # ─── Keycloak: identity / OIDC ────────────────────────────────
+  # Dev mode (HTTP allowed) + import-realm for first-boot realm provisioning.
+  # The dev realm lives in ./keycloak/realms/vulis-realm-dev.json.
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD must be set in .env}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-vulis}
+      KC_DB_USERNAME: ${POSTGRES_USER:-vulis}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "${KEYCLOAK_HOST_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./keycloak/realms:/opt/keycloak/data/import:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -sf http://127.0.0.1:8080/health/ready | grep -q UP || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+
+  # ─── Traefik: reverse proxy + dev dashboard ──────────────────
+  # No TLS in dev — HTTP-only entrypoint. Real TLS terminates at the
+  # workstation / edge proxies in production.
+  traefik:
+    image: traefik:v3.0
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --accesslog=true
+    ports:
+      - "${TRAEFIK_HTTP_PORT:-80}:80"
+      - "${TRAEFIK_HTTPS_PORT:-443}:443"
+      - "${TRAEFIK_DASHBOARD_PORT:-8081}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-platform-data:/data
+    depends_on:
+      - keycloak
+
+  # ─── Alembic: one-shot schema migration ──────────────────────
+  # Runs `alembic upgrade head` against the platform Postgres, then exits.
+  # Binds the workspace so the libs/schemas package + its workspace
+  # dependencies (vulis-core-py) are importable.
+  # Profile: "platform" — only starts when --profile platform is passed.
+  alembic:
+    image: python:3.11-slim
+    profiles: ["platform"]
+    working_dir: /workspace
+    volumes:
+      - ../../:/workspace
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        pip install -q uv
+        uv sync --package vulis-schemas --extra dev 2>&1 | tail -5
+        cd libs/schemas
+        uv run alembic -c alembic.ini upgrade head
+    environment:
+      VULIS_POSTGRES_DSN: postgresql://${POSTGRES_USER:-vulis}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vulis}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-platform-data:
+  redis-platform-data:
+  mosquitto-platform-data:
+  mosquitto-platform-log:
+  traefik-platform-data:

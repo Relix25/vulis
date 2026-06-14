@@ -10,6 +10,7 @@ version: '3'
 vars:
   # Compose files
   COMPOSE_DEV: docker/compose/docker-compose.dev.yml
+  COMPOSE_PLATFORM: docker/compose/docker-compose.platform.yml
   # Python tooling
   PYTHON_DIRS: libs services tools
 
@@ -27,31 +28,91 @@ tasks:
 
   # ────────────────────────── dev stack ──────────────────────────
   up:
+    desc: Start the local dev stack (alias of up:dev)
+    cmds:
+      - task: up:dev
+
+  up:dev:
     desc: Start the local dev stack (Postgres, Mosquitto, Redis, Keycloak)
     cmds:
       - docker compose -f {{.COMPOSE_DEV}} up -d
-      - cmd: echo "✓ Dev stack started. Logs: task logs"
+      - cmd: echo "✓ Dev stack started — see 'task logs' to follow"
         platforms: [linux, darwin, windows]
 
   down:
+    desc: Stop the local dev stack (alias of down:dev)
+    cmds:
+      - task: down:dev
+
+  down:dev:
     desc: Stop the local dev stack
     cmds:
       - docker compose -f {{.COMPOSE_DEV}} down
 
   down-v:
+    desc: Stop the dev stack AND delete volumes (destructive, alias of down:dev-v)
+    cmds:
+      - task: down:dev-v
+
+  down:dev-v:
     desc: Stop the dev stack AND delete volumes (destructive)
     cmds:
       - docker compose -f {{.COMPOSE_DEV}} down -v
 
   logs:
+    desc: Tail dev stack logs (alias of logs:dev)
+    cmds:
+      - task: logs:dev
+
+  logs:dev:
     desc: Tail dev stack logs
     cmds:
       - docker compose -f {{.COMPOSE_DEV}} logs -f --tail=200
 
   ps:
+    desc: Show running dev containers (alias of ps:dev)
+    cmds:
+      - task: ps:dev
+
+  ps:dev:
     desc: Show running dev containers
     cmds:
       - docker compose -f {{.COMPOSE_DEV}} ps
+
+  # ────────────────────────── platform stack (M1.2) ──────────────
+  up:platform:
+    desc: Start the platform stack (Postgres, Redis, Mosquitto+auth, Keycloak, Traefik) + run alembic + smoke test
+    cmds:
+      - docker compose --profile platform -f {{.COMPOSE_PLATFORM}} up -d
+      - task: init:platform
+
+  init:platform:
+    desc: Wait for platform services + verify alembic + smoke test (called by up:platform)
+    cmds:
+      - cmd: bash docker/compose/init-platform.sh
+        platforms: [linux, darwin]
+      - cmd: powershell -ExecutionPolicy Bypass -File docker/compose/init-platform.ps1
+        platforms: [windows]
+
+  down:platform:
+    desc: Stop the platform stack (keep volumes)
+    cmds:
+      - docker compose --profile platform -f {{.COMPOSE_PLATFORM}} down
+
+  down:platform-v:
+    desc: Stop the platform stack AND delete volumes (destructive)
+    cmds:
+      - docker compose --profile platform -f {{.COMPOSE_PLATFORM}} down -v
+
+  logs:platform:
+    desc: Tail platform stack logs
+    cmds:
+      - docker compose --profile platform -f {{.COMPOSE_PLATFORM}} logs -f --tail=200
+
+  ps:platform:
+    desc: Show running platform containers
+    cmds:
+      - docker compose --profile platform -f {{.COMPOSE_PLATFORM}} ps
 
   # ────────────────────────── quality ────────────────────────────
   lint:
