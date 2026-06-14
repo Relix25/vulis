@@ -1,0 +1,42 @@
+name: Changeset check
+
+# Ensures that PRs touching a releasable package also add a changeset
+# under changes/, unless the change is docs/CI/test-only (allowlisted).
+
+on:
+  pull_request:
+    paths:
+      - 'libs/**'
+      - 'services/**'
+      - 'apps/**'
+      - 'tools/**'
+
+jobs:
+  changeset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for code changes in releasable packages
+        id: code
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            code:
+              - 'libs/**/*.{py,toml}'
+              - 'services/**/*.{py,toml}'
+              - 'apps/**/*.rs'
+              - 'apps/**/Cargo.toml'
+              - 'tools/**/*.{py,rs}'
+              - 'tools/**/Cargo.toml'
+
+      - name: Check for changeset
+        if: steps.code.outputs.code == 'true'
+        run: |
+          # Count *.md files added/modified in changes/
+          if ! git diff --name-only origin/${{ github.base_ref }} HEAD -- 'changes/*.md' | grep -q .; then
+            echo "::error::This PR modifies a releasable package but adds no changeset in changes/."
+            echo "::error::Add a file like changes/<short-description>.md (see CONTRIBUTING.md)."
+            echo "::error::If this is docs/CI/test-only, no changeset is needed; ignore this error after double-checking."
+            exit 1
+          fi

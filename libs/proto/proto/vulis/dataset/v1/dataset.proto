@@ -1,0 +1,142 @@
+// SPDX-FileCopyrightText: 2026 Vulis Project Contributors
+// SPDX-License-Identifier: LicenseRef-Vulis-BSL-1.1
+//
+// Vulis — B2 Dataset service contract.
+//
+// Dataset versions are immutable manifests (JSON) of content-addressed blobs;
+// the actual bytes live in the storage backend (see libs/storage, ADR 0006).
+
+syntax = "proto3";
+
+package vulis.dataset.v1;
+
+import "vulis/common/v1/common.proto";
+
+option go_package = "github.com/vulis/vulis/proto/vulis/dataset/v1;datasetv1";
+
+message Dataset {
+  vulis.common.v1.EntityId id = 1;
+  vulis.common.v1.EntityId tenant_id = 2;
+  vulis.common.v1.EntityId project_id = 3;
+  string name = 4;
+  string description = 5;
+  vulis.common.v1.TaskKind task_kind = 6;
+  uint32 version_count = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+// An immutable snapshot of a dataset. Versioning is content-addressed at the
+// blob level: each Sample points to a storage key, and the manifest is the
+// list of (key, label) pairs.
+message DatasetVersion {
+  vulis.common.v1.EntityId id = 1;
+  vulis.common.v1.EntityId dataset_id = 2;
+  vulis.common.v1.SemVer version = 3;
+  string manifest_digest = 4;  // sha256 of the manifest JSON
+  uint32 sample_count = 5;
+  uint64 size_bytes = 6;
+  string created_by = 7;
+  google.protobuf.Timestamp created_at = 8;
+  map<string, string> metadata = 9;
+}
+
+message Sample {
+  string key = 1;            // storage key (content-addressed for blobs)
+  string relative_path = 2;  // logical path inside the dataset (e.g. "train/img_001.png")
+  string annotation_key = 3; // optional, content-addressed annotation
+  string label = 4;          // optional, for classification
+  uint64 size_bytes = 5;
+}
+
+// Split membership of a sample within a dataset version.
+enum Split {
+  SPLIT_UNSPECIFIED = 0;
+  SPLIT_TRAIN = 1;
+  SPLIT_VAL = 2;
+  SPLIT_TEST = 3;
+}
+
+// ─── Service ─────────────────────────────────────────────────
+
+service DatasetService {
+  rpc CreateDataset(CreateDatasetRequest) returns (Dataset);
+  rpc GetDataset(GetDatasetRequest) returns (Dataset);
+  rpc ListDatasets(ListDatasetsRequest) returns (ListDatasetsResponse);
+
+  rpc CreateVersion(CreateVersionRequest) returns (DatasetVersion);
+  rpc GetVersion(GetVersionRequest) returns (DatasetVersion);
+  rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
+  rpc GetManifest(GetManifestRequest) returns (Manifest);
+
+  // Bulk add samples to a draft version, then publish it.
+  rpc AddSamples(stream AddSamplesRequest) returns (AddSamplesResponse);
+  rpc PublishVersion(PublishVersionRequest) returns (DatasetVersion);
+}
+
+// ─── Requests / Responses ────────────────────────────────────
+
+message CreateDatasetRequest {
+  string tenant_id = 1;
+  string project_id = 2;
+  string name = 3;
+  string description = 4;
+  vulis.common.v1.TaskKind task_kind = 5;
+}
+
+message GetDatasetRequest {
+  string id = 1;
+}
+
+message ListDatasetsRequest {
+  string project_id = 1;
+  vulis.common.v1.PageRequest page = 2;
+}
+
+message ListDatasetsResponse {
+  repeated Dataset datasets = 1;
+  vulis.common.v1.PageResponse page = 2;
+}
+
+message CreateVersionRequest {
+  string dataset_id = 1;
+  vulis.common.v1.SemVer version = 2;  // optional; auto-bumped if empty
+  map<string, string> metadata = 3;
+}
+
+message GetVersionRequest {
+  string version_id = 1;
+}
+
+message ListVersionsRequest {
+  string dataset_id = 1;
+}
+
+message ListVersionsResponse {
+  repeated DatasetVersion versions = 1;
+}
+
+message GetManifestRequest {
+  string version_id = 1;
+}
+
+message Manifest {
+  string version_id = 1;
+  string digest = 2;
+  repeated Sample samples = 3;
+  map<string, string> splits = 4;  // sample_key → Split (string)
+}
+
+// Streaming add: each message carries a chunk of samples.
+message AddSamplesRequest {
+  string version_id = 1;
+  repeated Sample samples = 2;
+}
+
+message AddSamplesResponse {
+  uint32 added = 1;
+  uint32 duplicate = 2;
+}
+
+message PublishVersionRequest {
+  string version_id = 1;
+}

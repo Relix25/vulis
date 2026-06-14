@@ -1,0 +1,45 @@
+# CODEOWNERS — Vulis monorepo
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Each area has at least one owner. PRs touching an area request review
+# from its owners automatically. Update this file as the team grows.
+
+# ─── Default: project maintainers ─────────────────────────────
+*                           @vulis/maintainers
+
+# ─── Foundations / shared libs ────────────────────────────────
+/libs/core-py/              @vulis/maintainers
+/libs/proto/                @vulis/maintainers
+/libs/storage/              @vulis/maintainers
+/libs/obs-py/               @vulis/maintainers
+/libs/schemas/              @vulis/maintainers
+
+# ─── Services ─────────────────────────────────────────────────
+/services/project-api/      @vulis/maintainers
+/services/dataset/          @vulis/maintainers
+/services/registry/         @vulis/maintainers
+/services/training/         @vulis/maintainers
+/services/serving/          @vulis/maintainers
+/services/acquisition/      @vulis/maintainers
+/services/fleet/            @vulis/maintainers
+/services/observability/    @vulis/maintainers
+/services/gateway/          @vulis/maintainers
+
+# ─── Apps ─────────────────────────────────────────────────────
+/apps/web/                  @vulis/maintainers
+/apps/tauri-app/            @vulis/maintainers
+
+# ─── Tooling ──────────────────────────────────────────────────
+/tools/vulis-cli/           @vulis/maintainers
+/tools/release/             @vulis/maintainers
+/.github/                   @vulis/maintainers
+/Taskfile.yml               @vulis/maintainers
+/docker/                    @vulis/maintainers
+
+# ─── Docs / governance ────────────────────────────────────────
+/ARCHITECTURE.md            @vulis/maintainers
+/ADR/                       @vulis/maintainers
+/CONTRIBUTING.md            @vulis/maintainers
+/GOVERNANCE.md              @vulis/maintainers
+/LICENSE                    @vulis/maintainers
+/NOTICE                     @vulis/maintainers

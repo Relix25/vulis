@@ -1,0 +1,85 @@
+# Vulis — local development stack
+#
+# Lightweight, single-node compose for development only.
+# NOT for production: default passwords, no TLS, no resource limits.
+# See SECURITY.md and docker/compose/docker-compose.platform.yml (M1.2).
+
+name: vulis-dev
+
+services:
+
+  # ─── PostgreSQL: metadata store ───────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: vulis
+      POSTGRES_PASSWORD: vulis-dev-password
+      POSTGRES_DB: vulis
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vulis -d vulis"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─── Redis: cache / locks ─────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─── Mosquitto: MQTT 5 broker (Sparkplug-ready) ───────────────
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"     # MQTT
+      - "9001:9001"     # websockets (optional, for dev UIs)
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    healthcheck:
+      # Mosquitto 2 has no built-in healthcheck; we use the broker's port.
+      test: ["CMD-SHELL", "timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/1883' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ─── Keycloak: identity / OIDC ────────────────────────────────
+  # Uses the dev "vulis" realm imported on first boot.
+  # In M1.2 we will ship a proper realm export.
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/vulis
+      KC_DB_USERNAME: vulis
+      KC_DB_PASSWORD: vulis-dev-password
+      KC_HOSTNAME: localhost
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./keycloak/realms:/opt/keycloak/data/import:ro
+
+volumes:
+  postgres-data:
+  redis-data:
+  mosquitto-data:
+  mosquitto-log:

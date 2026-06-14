@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vulis-schemas"
+version = "0.1.0"
+description = "Vulis shared SQLAlchemy declarative base + Alembic migrations + typed mixins."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "LicenseRef-Vulis-BSL-1.1"
+license-files = ["../../LICENSE", "../../LICENSES/*.txt"]
+authors = [{ name = "Vulis Project Contributors" }]
+keywords = ["vulis", "sqlalchemy", "alembic", "migrations"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Manufacturing",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "vulis-core-py>=0.1.0",
+    "SQLAlchemy>=2.0",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/vulis/vulis"
+Repository = "https://github.com/vulis/vulis"
+Documentation = "https://vulis.github.io/vulis/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vulis_schemas"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+# SQLAlchemy 2.x typed; enable strict-ish.
+strict = true
+plugins = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"

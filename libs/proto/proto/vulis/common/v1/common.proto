@@ -1,0 +1,71 @@
+// SPDX-FileCopyrightText: 2026 Vulis Project Contributors
+// SPDX-License-Identifier: LicenseRef-Vulis-BSL-1.1
+//
+// Vulis — common types shared across all service contracts.
+// See ARCHITECTURE.md and libs/core-py for the authoritative Python types.
+
+syntax = "proto3";
+
+package vulis.common.v1;
+
+option go_package = "github.com/vulis/vulis/proto/vulis/common/v1;commonv1";
+
+// ─── Identifiers ─────────────────────────────────────────────
+
+// A typed entity identifier. The `prefix` field disambiguates the kind
+// (proj_, ds_, mdl_, ...) at the wire level; the `value` is the UUID hex.
+// Wire form mirrors the Python `str(EntityId)` convention.
+message EntityId {
+  string prefix = 1;  // e.g. "proj", "ds"
+  string value = 2;   // UUID hex (32 chars, no dashes) or full prefixed form
+}
+
+// A semantic version (SemVer 2.0.0).
+message SemVer {
+  uint32 major = 1;
+  uint32 minor = 2;
+  uint32 patch = 3;
+  repeated string pre_release = 4;
+  repeated string build = 5;
+}
+
+// ─── Enumerations ────────────────────────────────────────────
+
+// The kind of vision task a model/dataset addresses.
+enum TaskKind {
+  TASK_KIND_UNSPECIFIED = 0;
+  TASK_KIND_DETECTION = 1;
+  TASK_KIND_CLASSIFICATION = 2;
+  TASK_KIND_SEGMENTATION = 3;
+}
+
+// Deployment surface (see ADR 0005).
+enum Surface {
+  SURFACE_UNSPECIFIED = 0;
+  SURFACE_WORKSTATION = 1;
+  SURFACE_SERVER = 2;
+  SURFACE_EDGE = 3;
+}
+
+// ─── Shared response bits ────────────────────────────────────
+
+// Standard error payload returned by services. Transport-level mapping to
+// gRPC status codes is done by each service's exception interceptor.
+message Error {
+  string code = 1;          // e.g. "VULIS_NOT_FOUND"
+  string message = 2;
+  map<string, string> details = 3;
+  string correlation_id = 4;
+}
+
+// Pagination request.
+message PageRequest {
+  uint32 page_size = 1;     // 0 = server default
+  string page_token = 2;    // opaque cursor
+}
+
+// Pagination response.
+message PageResponse {
+  string next_page_token = 1;
+  uint32 total_size = 2;    // optional, 0 if unknown
+}

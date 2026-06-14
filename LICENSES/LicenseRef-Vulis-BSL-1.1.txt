@@ -1,0 +1,19 @@
+This file simply points at the LICENSE file at the repository root.
+The Business Source License 1.1 (BSL 1.1) text governing Vulis is the
+authoritative one located at:
+
+    https://github.com/vulis/vulis/blob/main/LICENSE
+
+A copy is mirrored at the root of the repository in ./LICENSE.
+
+Parameters for this project:
+
+    Licensor:             Vulis Project Contributors
+    Licensed Work:        Vulis — Industrial Vision Platform
+    Licensed Work Date:   2026-06-14
+    Change Date:          2030-06-14
+    Change License:       GNU Affero General Public License v3.0 only
+                          (AGPL-3.0-only)
+
+The full BSL 1.1 template is available from the licensor at:
+    https://mariadb.com/bsl11/

@@ -1,0 +1,101 @@
+site_name: Vulis — Industrial Vision Platform
+site_description: >-
+  Vulis is an end-to-end, air-gap-ready, source-available platform for
+  deploying and operating computer-vision inspection on industrial lines.
+site_url: https://vulis.github.io/vulis/
+repo_name: vulis/vulis
+repo_url: https://github.com/vulis/vulis
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - navigation.tracking
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Quick start: getting-started/quick-start.md
+      - Concepts: getting-started/concepts.md
+  - Architecture: architecture.md
+  - Decisions (ADR):
+      - Index: adr/index.md
+  - Contributing:
+      - Guide: contributing.md
+      - Governance: governance.md
+      - Security: security.md
+  - Licensing: licensing.md
+
+exclude_docs: |
+  !README.md
+  !CONTRIBUTING.md
+  !GOVERNANCE.md
+  !SECURITY.md
+  !ARCHITECTURE.md
+  !ADR/
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: date
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tilde
+  - tables
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+  - footnotes
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/vulis/vulis
+  version:
+    provider: mike
+
+copyright: >-
+  © 2026 Vulis Project Contributors —
+  <a href="https://github.com/vulis/vulis/blob/main/LICENSE">BSL 1.1</a>
+  → AGPL-3.0 on 2030-06-14.

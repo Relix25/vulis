@@ -1,0 +1,65 @@
+Vulis — Industrial Vision Platform
+Copyright (c) 2026 Vulis Project Contributors
+
+This product is licensed under the Business Source License 1.1 (BSL 1.1).
+See the LICENSE file for the full license text and the plain-language summary
+of permitted and prohibited uses.
+
+The Licensed Work will become available under the GNU Affero General Public
+License v3.0 (AGPL-3.0) on the Change Date: 2030-06-14.
+
+For commercial licensing, alternative licensing, or partnership inquiries,
+contact the maintainers via the project repository:
+    https://github.com/vulis/vulis
+
+----------------------------------------------------------------------
+
+Contributors (chronological):
+
+    Initial architecture and implementation:
+        Basti  <basti@example.com>   (2026)
+
+    This list is maintained manually; the authoritative record is the git
+    commit history. Every contributor agrees (via the Developer Certificate
+    of Origin, see CONTRIBUTING.md) that their contributions are licensed
+    under the BSL 1.1, and on the Change Date, the Change License (AGPL-3.0).
+
+----------------------------------------------------------------------
+
+Third-party components (vendored or required at runtime):
+
+    Vulis depends on, and is distributed alongside, third-party open source
+    software. Those components retain their original licenses and copyrights;
+    they are NOT covered by the BSL 1.1 license of Vulis itself.
+
+    The full, machine-readable list of third-party dependencies and their
+    licenses is generated per-build in:
+        - Python:   libs/*/pyproject.toml + uv.lock
+        - Rust:     apps/tauri-app/Cargo.toml + Cargo.lock
+        - TS/JS:    apps/web/package.json + pnpm-lock.yaml
+
+    Notable runtime dependencies (non-exhaustive, with their licenses):
+
+        PostgreSQL        (PostgreSQL License)
+        Eclipse Mosquitto (EPL-2.0 / BSD-3-Clause)
+        Redis             (RSALv2 / SSPL)
+        Keycloak          (Apache-2.0)
+        Traefik           (MIT)
+        Grafana           (AGPL-3.0)
+        Prometheus        (Apache-2.0)
+        OpenTelemetry     (Apache-2.0)
+        FastAPI           (MIT)
+        PyTorch           (BSD-3-Clause)
+        ONNX Runtime      (MIT)
+        OpenCV            (Apache-2.0)
+        smbprotocol       (MIT)
+        Eclipse Paho MQTT (EPL-2.0 / BSD-3-Clause)
+
+    Docker images referenced by the platform compose files (Postgres,
+    Mosquitto, Redis, Keycloak, Traefik, Grafana, etc.) are governed by
+    their own image licenses; consult each image's registry page for terms.
+
+----------------------------------------------------------------------
+
+If you believe any attribution is missing or incorrect, please open an issue
+or submit a pull request. We will correct it promptly.

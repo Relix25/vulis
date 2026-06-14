@@ -1,0 +1,58 @@
+# SPDX configuration for the `reuse` tool (https://reuse.software)
+# Vulis — Industrial Vision Platform
+#
+# Validates and applies SPDX headers across the monorepo.
+# Run:   reuse lint      (check)
+#        reuse annotate  (apply headers)
+
+version = 1
+
+[[annotations]]
+path = [
+    "docs/**",
+    "ADR/**",
+    "changes/**",
+    "**/*.md",
+    "**/*.markdown",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Vulis Project Contributors"
+SPDX-License-Identifier = "LicenseRef-Vulis-BSL-1.1"
+
+[[annotations]]
+path = [
+    "**/*.yml",
+    "**/*.yaml",
+    "**/*.toml",
+    "**/*.json",
+    "**/*.jsonc",
+    "**/*.cfg",
+    "**/*.ini",
+    "**/*.txt",
+    "Taskfile.yml",
+    ".editorconfig",
+    ".gitattributes",
+    ".gitignore",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Vulis Project Contributors"
+SPDX-License-Identifier = "LicenseRef-Vulis-BSL-1.1"
+
+[[annotations]]
+path = [
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.jpeg",
+    "**/*.gif",
+    "**/*.webp",
+    "**/*.ico",
+    "**/*.svg",
+    "**/*.pdf",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Vulis Project Contributors"
+SPDX-License-Identifier = "LicenseRef-Vulis-BSL-1.1"
+
+# ─── License reference for the BSL 1.1 ─────────────────────────
+# The full BSL 1.1 text lives in ./LICENSE. We register it so that
+# SPDX identifiers like "LicenseRef-Vulis-BSL-1.1" resolve correctly.

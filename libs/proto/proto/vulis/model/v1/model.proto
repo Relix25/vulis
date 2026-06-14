@@ -1,0 +1,161 @@
+// SPDX-FileCopyrightText: 2026 Vulis Project Contributors
+// SPDX-License-Identifier: LicenseRef-Vulis-BSL-1.1
+//
+// Vulis — B2 Model Registry service contract.
+//
+// The registry implements an approval workflow (see M1.5):
+//   draft → internal_review → staging → approved → deployed → archived
+// Each transition is recorded in the audit trail and gated by RBAC.
+
+syntax = "proto3";
+
+package vulis.model.v1;
+
+import "vulis/common/v1/common.proto";
+
+option go_package = "github.com/vulis/vulis/proto/vulis/model/v1;modelv1";
+
+message Model {
+  vulis.common.v1.EntityId id = 1;
+  vulis.common.v1.EntityId tenant_id = 2;
+  vulis.common.v1.EntityId project_id = 3;
+  vulis.common.v1.EntityId task_id = 4;
+  string name = 5;
+  string description = 6;
+  vulis.common.v1.TaskKind task_kind = 7;
+  uint32 version_count = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+// A model version. The artifact is a content-addressed ONNX file in storage.
+message ModelVersion {
+  vulis.common.v1.EntityId id = 1;
+  vulis.common.v1.EntityId model_id = 2;
+  vulis.common.v1.SemVer version = 3;
+  ModelStatus status = 4;
+  string artifact_key = 5;     // storage key of the ONNX blob
+  string artifact_digest = 6;  // sha256 of the ONNX file
+  uint64 artifact_size_bytes = 7;
+
+  // Reproducibility: which dataset version was this trained on.
+  vulis.common.v1.EntityId trained_on_dataset_version_id = 8;
+  string mlflow_run_id = 9;     // link to training tracking
+
+  // ONNX validation metadata, captured at upload time.
+  repeated OnnxTensorSpec inputs = 10;
+  repeated OnnxTensorSpec outputs = 11;
+  uint32 onnx_opset = 12;
+  string model_card = 13;       // markdown
+
+  string created_by = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+  map<string, string> metadata = 17;
+}
+
+// Description of a single ONNX input or output tensor.
+message OnnxTensorSpec {
+  string name = 1;
+  string dtype = 2;            // e.g. "tensor(float)"
+  repeated int64 shape = 3;    // -1 for dynamic dims
+  map<string, string> metadata = 4;
+}
+
+// ─── Enums ───────────────────────────────────────────────────
+
+enum ModelStatus {
+  MODEL_STATUS_UNSPECIFIED = 0;
+  MODEL_STATUS_DRAFT = 1;
+  MODEL_STATUS_INTERNAL_REVIEW = 2;
+  MODEL_STATUS_STAGING = 3;
+  MODEL_STATUS_APPROVED = 4;
+  MODEL_STATUS_DEPLOYED = 5;
+  MODEL_STATUS_ARCHIVED = 6;
+  MODEL_STATUS_REJECTED = 7;
+}
+
+// ─── Service ─────────────────────────────────────────────────
+
+service ModelRegistryService {
+  rpc CreateModel(CreateModelRequest) returns (Model);
+  rpc GetModel(GetModelRequest) returns (Model);
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+
+  // Upload an ONNX artifact and create a draft model version.
+  rpc UploadVersion(stream UploadVersionRequest) returns (ModelVersion);
+  rpc GetVersion(GetVersionRequest) returns (ModelVersion);
+  rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
+  rpc PromoteVersion(PromoteVersionRequest) returns (ModelVersion);
+  rpc GetModelCard(GetModelCardRequest) returns (ModelCard);
+}
+
+// ─── Requests / Responses ────────────────────────────────────
+
+message CreateModelRequest {
+  string tenant_id = 1;
+  string project_id = 2;
+  string task_id = 3;
+  string name = 4;
+  string description = 5;
+  vulis.common.v1.TaskKind task_kind = 6;
+}
+
+message GetModelRequest {
+  string id = 1;
+}
+
+message ListModelsRequest {
+  string project_id = 1;
+  vulis.common.v1.PageRequest page = 2;
+}
+
+message ListModelsResponse {
+  repeated Model models = 1;
+  vulis.common.v1.PageResponse page = 2;
+}
+
+// First message of the stream carries metadata; subsequent messages carry
+// the ONNX file in chunks.
+message UploadVersionRequest {
+  oneof payload {
+    UploadMetadata metadata = 1;
+    bytes chunk = 2;
+  }
+}
+
+message UploadMetadata {
+  string model_id = 1;
+  vulis.common.v1.SemVer version = 2;  // optional; auto-bumped if empty
+  string trained_on_dataset_version_id = 3;
+  string mlflow_run_id = 4;
+  uint64 expected_size_bytes = 5;
+  map<string, string> metadata = 6;
+}
+
+message GetVersionRequest {
+  string version_id = 1;
+}
+
+message ListVersionsRequest {
+  string model_id = 1;
+}
+
+message ListVersionsResponse {
+  repeated ModelVersion versions = 1;
+}
+
+message PromoteVersionRequest {
+  string version_id = 1;
+  ModelStatus to = 2;
+  string reason = 3;
+}
+
+message GetModelCardRequest {
+  string version_id = 1;
+}
+
+message ModelCard {
+  string version_id = 1;
+  string markdown = 2;
+  map<string, string> metrics = 3;
+}

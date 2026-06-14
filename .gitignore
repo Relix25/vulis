@@ -1,0 +1,151 @@
+# ─────────────────────────────────────────────────────────────
+# Vulis — .gitignore
+# ─────────────────────────────────────────────────────────────
+
+# ─── OS / Editors ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# ─── Python ──────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg
+MANIFEST
+
+# Virtual envs
+.venv/
+venv/
+env/
+ENV/
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# uv
+# (keep uv.lock versioned — do NOT ignore)
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ─── Rust / Cargo (Tauri) ────────────────────────────────────
+target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# Note: Cargo.lock IS committed for apps/binaries, ignored for libs.
+# Tauri apps and binaries keep their Cargo.lock. Decide per-Crate.
+
+# ─── Node / TypeScript ───────────────────────────────────────
+node_modules/
+.pnp.*
+.pnp.js
+.yarn/install-state.gz
+.yarn/cache
+.yarn/unplugged
+
+# Build outputs (web/tauri)
+dist/
+dist-ssr/
+*.local
+.vite/
+.turbo/
+next-env.d.ts
+out/
+build/
+
+# Tauri specific
+src-tauri/target/
+src-tauri/gen/
+
+# ─── Go (legacy / future) ────────────────────────────────────
+# (no Go code currently, kept for future use)
+*.exe
+*.exe~
+*.dll
+*.dylib
+*.test
+*.out
+
+# ─── Docker ──────────────────────────────────────────────────
+docker/**/*.env
+docker/**/data/
+docker/**/volumes/
+
+# ─── Secrets / local config ──────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+local.config.yaml
+
+# ─── Datasets / models / artifacts (large blobs) ────────────
+# These live in object storage (SMB/S3), never in git.
+*.onnx
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+*.h5
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+datasets/
+models/
+artifacts/
+artifacts-store/
+runs/
+mlruns/
+wandb/
+
+# ─── MkDocs ──────────────────────────────────────────────────
+site/
+
+# ─── Misc ────────────────────────────────────────────────────
+*.log
+*.pid
+*.bak
+*.tmp
+.cache/
+tmp/
