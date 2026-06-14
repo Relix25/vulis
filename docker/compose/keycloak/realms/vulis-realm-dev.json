@@ -34,6 +34,9 @@
   "users": [
     {
       "username": "admin",
+      "email": "admin@vulis.local",
+      "firstName": "Platform",
+      "lastName": "Admin",
       "enabled": true,
       "emailVerified": true,
       "credentials": [
@@ -44,6 +47,9 @@
     },
     {
       "username": "data-scientist",
+      "email": "data-scientist@vulis.local",
+      "firstName": "Data",
+      "lastName": "Scientist",
       "enabled": true,
       "emailVerified": true,
       "credentials": [
@@ -54,6 +60,9 @@
     },
     {
       "username": "annotator",
+      "email": "annotator@vulis.local",
+      "firstName": "Data",
+      "lastName": "Annotator",
       "enabled": true,
       "emailVerified": true,
       "credentials": [
@@ -64,6 +73,9 @@
     },
     {
       "username": "operator",
+      "email": "operator@vulis.local",
+      "firstName": "Floor",
+      "lastName": "Operator",
       "enabled": true,
       "emailVerified": true,
       "credentials": [
@@ -74,6 +86,9 @@
     },
     {
       "username": "reviewer",
+      "email": "reviewer@vulis.local",
+      "firstName": "Model",
+      "lastName": "Reviewer",
       "enabled": true,
       "emailVerified": true,
       "credentials": [

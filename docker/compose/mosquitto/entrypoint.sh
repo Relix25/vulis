@@ -18,6 +18,9 @@ if [ -z "${VULIS_MQTT_USER:-}" ] || [ -z "${VULIS_MQTT_PASS:-}" ]; then
 fi
 
 # Generate (or overwrite) the password file in batch mode.
+# mosquitto_passwd -c errors out if the file already exists, so we remove
+# it first. The volume mount means it persists across restarts.
+rm -f "$PASSWD_FILE"
 mosquitto_passwd -b -c "$PASSWD_FILE" "$VULIS_MQTT_USER" "$VULIS_MQTT_PASS"
 chown mosquitto:mosquitto "$PASSWD_FILE" 2>/dev/null || true
 chmod 600 "$PASSWD_FILE"

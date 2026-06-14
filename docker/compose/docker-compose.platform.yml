@@ -83,10 +83,12 @@ services:
       VULIS_MQTT_USER: ${MQTT_USER:?MQTT_USER must be set in .env}
       VULIS_MQTT_PASS: ${MQTT_PASSWORD:?MQTT_PASSWORD must be set in .env}
     healthcheck:
-      # Mosquitto 2 has no native healthcheck; just probe the port.
+      # Mosquitto 2 has no native healthcheck; probe the broker port.
+      # We use `nc` (busybox) instead of bash's /dev/tcp, since the
+      # eclipse-mosquitto:2 image is Alpine-based and ships busybox sh.
       test:
         - CMD-SHELL
-        - timeout 1 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/1883' || exit 1
+        - nc -z -w 1 127.0.0.1 1883 || exit 1
       interval: 10s
       timeout: 3s
       retries: 10
@@ -117,9 +119,18 @@ services:
     volumes:
       - ./keycloak/realms:/opt/keycloak/data/import:ro
     healthcheck:
+      # Keycloak 25 in start-dev mode doesn't expose /health/ready (404) and
+      # the image has no curl. We do a real HTTP/1.1 probe via bash's built-in
+      # /dev/tcp: open the port, send a GET with a Host header (Keycloak
+      # requires Host to compute the request authority), look for "200 OK".
       test:
         - CMD-SHELL
-        - curl -sf http://127.0.0.1:8080/health/ready | grep -q UP || exit 1
+        - |
+          bash -c '
+          exec 3<>/dev/tcp/127.0.0.1/8080
+          printf "GET /realms/master HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3
+          grep -q "200 OK" <&3
+          '
       interval: 15s
       timeout: 5s
       retries: 20
@@ -170,7 +181,9 @@ services:
         cd libs/schemas
         uv run alembic -c alembic.ini upgrade head
     environment:
-      VULIS_POSTGRES_DSN: postgresql://${POSTGRES_USER:-vulis}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vulis}
+      # Read the DSN from .env so the driver scheme (e.g. postgresql+psycopg)
+      # is in one place. Defaults match .env.example.
+      VULIS_POSTGRES_DSN: ${VULIS_POSTGRES_DSN:?VULIS_POSTGRES_DSN must be set in .env}
     depends_on:
       postgres:
         condition: service_healthy
