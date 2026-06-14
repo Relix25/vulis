@@ -19,7 +19,7 @@ jobs:
 
       - name: Check for code changes in releasable packages
         id: code
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             code:
