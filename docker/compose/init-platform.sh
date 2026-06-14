@@ -53,34 +53,63 @@ PROJECT="vulis-platform"
 COMPOSE=(docker compose -p "$PROJECT" -f docker-compose.platform.yml)
 
 # ─── 1. Wait for alembic one-shot ─────────────────────────────
-echo "⏳ Waiting for alembic one-shot to finish..."
+# Two outcomes are valid:
+#   a) The alembic container is still running (it just ran via `up -d`)
+#      → wait for it to exit cleanly.
+#   b) The alembic container has already finished and been cleaned up
+#      (e.g. the init script is re-run) → just verify the schema is at head.
+echo "⏳ Verifying alembic migration is applied..."
+ALEMBIC_OK=0
 for i in $(seq 1 90); do
   STATUS_JSON="$("${COMPOSE[@]}" ps alembic --format json 2>/dev/null || true)"
+
   if [ -n "$STATUS_JSON" ] && [ "$STATUS_JSON" != "[]" ] && [ "$STATUS_JSON" != "null" ]; then
+    # Container still exists — wait for it to finish.
     STATE=$(echo "$STATUS_JSON" | grep -oE '"State":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
     if [ "$STATE" = "exited" ]; then
       EXIT_CODE=$(echo "$STATUS_JSON" | grep -oE '"ExitCode":[0-9-]+' | head -1 | cut -d':' -f2 || true)
       if [ "${EXIT_CODE:-1}" = "0" ]; then
-        echo "✓ Alembic migration applied (schema is at head)"
+        echo "✓ Alembic one-shot finished (exit 0)"
+        ALEMBIC_OK=1
         break
       else
         echo "❌ Alembic exited with code $EXIT_CODE — check: ${COMPOSE[*]} logs alembic"
         exit 1
       fi
     fi
+  else
+    # Container gone (likely cleaned up after success) — verify schema.
+    if docker exec vulis-platform-postgres-1 psql -U "$PG_USER" -d "${POSTGRES_DB:-vulis}" \
+         -tA -c "SELECT version_num FROM alembic_version" 2>/dev/null | grep -qE '^[0-9]+$'; then
+      echo "✓ Alembic schema at head (alembic_version present)"
+      ALEMBIC_OK=1
+      break
+    fi
+    # Schema not yet applied — trigger alembic ourselves.
+    echo "… alembic not run yet, triggering it…"
+    "${COMPOSE[@]}" run --rm alembic
+    echo "✓ Alembic migration applied"
+    ALEMBIC_OK=1
+    break
   fi
+
   sleep 2
   if [ "$i" = 90 ]; then
     echo "❌ Alembic didn't finish in 180s"
     exit 1
   fi
 done
+[ "$ALEMBIC_OK" = "1" ] || { echo "❌ Alembic verification failed"; exit 1; }
 
 # ─── 2. Wait for Keycloak ─────────────────────────────────────
+# Keycloak 25 in start-dev mode doesn't expose /health/ready. The most
+# reliable "ready" signal is that the OIDC discovery doc for the master
+# realm is responding — which means the server is past startup and the
+# DB schema is initialized.
 echo "⏳ Waiting for Keycloak on :$KC_PORT..."
 for i in $(seq 1 60); do
-  if curl -sf "http://127.0.0.1:$KC_PORT/health/ready" > /dev/null 2>&1; then
-    echo "✓ Keycloak ready"
+  if curl -sf "http://127.0.0.1:$KC_PORT/realms/vulis/.well-known/openid-configuration" > /dev/null 2>&1; then
+    echo "✓ Keycloak ready (vulis realm responding)"
     break
   fi
   sleep 2

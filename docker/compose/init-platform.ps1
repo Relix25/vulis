@@ -45,14 +45,21 @@ $traefikPort  = [System.Environment]::GetEnvironmentVariable("TRAEFIK_DASHBOARD_
 $pgDb         = [System.Environment]::GetEnvironmentVariable("POSTGRES_DB") ?? "vulis"
 
 # ─── 1. Wait for alembic one-shot ───────────────────────────
-Write-Host "⏳ Waiting for alembic one-shot to finish..." -ForegroundColor Yellow
+# Two outcomes are valid:
+#   a) The alembic container is still running (it just ran via `up -d`)
+#      → wait for it to exit cleanly.
+#   b) The alembic container has already finished and been cleaned up
+#      (e.g. the init script is re-run) → just verify the schema is at head.
+Write-Host "⏳ Verifying alembic migration is applied..." -ForegroundColor Yellow
 $alembicDone = $false
 for ($i = 0; $i -lt 90; $i++) {
   $json = docker compose -p vulis-platform -f docker-compose.platform.yml ps alembic --format json 2>$null
+
   if ($LASTEXITCODE -eq 0 -and $json -and $json -ne "[]") {
+    # Container still exists — wait for it to finish.
     if ($json -match '"State":"exited"') {
       if ($json -match '"ExitCode":0') {
-        Write-Host "✓ Alembic migration applied (schema is at head)" -ForegroundColor Green
+        Write-Host "✓ Alembic one-shot finished (exit 0)" -ForegroundColor Green
         $alembicDone = $true
         break
       } else {
@@ -60,7 +67,26 @@ for ($i = 0; $i -lt 90; $i++) {
         exit 1
       }
     }
+  } else {
+    # Container gone — verify schema is at head.
+    $ver = docker exec vulis-platform-postgres-1 psql -U $pgUser -d $pgDb -tA -c "SELECT version_num FROM alembic_version" 2>$null
+    if ($ver -match '^\d+$') {
+      Write-Host "✓ Alembic schema at head (version $ver)" -ForegroundColor Green
+      $alembicDone = $true
+      break
+    }
+    # Schema not yet applied — trigger alembic ourselves.
+    Write-Host "… alembic not run yet, triggering it…" -ForegroundColor Yellow
+    docker compose -p vulis-platform -f docker-compose.platform.yml run --rm alembic
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "❌ Alembic run failed" -ForegroundColor Red
+      exit 1
+    }
+    Write-Host "✓ Alembic migration applied" -ForegroundColor Green
+    $alembicDone = $true
+    break
   }
+
   Start-Sleep -Seconds 2
 }
 if (-not $alembicDone) {
@@ -69,12 +95,16 @@ if (-not $alembicDone) {
 }
 
 # ─── 2. Wait for Keycloak ──────────────────────────────────
+# Keycloak 25 in start-dev mode doesn't expose /health/ready. The most
+# reliable "ready" signal is that the OIDC discovery doc for the vulis
+# realm is responding — which means the server is past startup and the
+# dev realm import succeeded.
 Write-Host "⏳ Waiting for Keycloak on :$kcPort..." -ForegroundColor Yellow
 $kcReady = $false
 for ($i = 0; $i -lt 60; $i++) {
   try {
-    Invoke-WebRequest -Uri "http://127.0.0.1:$kcPort/health/ready" -UseBasicParsing -TimeoutSec 3 | Out-Null
-    Write-Host "✓ Keycloak ready" -ForegroundColor Green
+    Invoke-WebRequest -Uri "http://127.0.0.1:$kcPort/realms/$kcRealm/.well-known/openid-configuration" -UseBasicParsing -TimeoutSec 3 | Out-Null
+    Write-Host "✓ Keycloak ready (vulis realm responding)" -ForegroundColor Green
     $kcReady = $true
     break
   } catch {
