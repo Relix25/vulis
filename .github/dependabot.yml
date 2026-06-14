@@ -1,0 +1,51 @@
+# Dependabot configuration
+#
+# Note: in the air-gap deployment context, Dependabot PRs land on GitHub
+# (from the maintainer's internet-connected workstation). They are then
+# mirrored into the server via `vulis relay sync` (see ADR 0007).
+
+version: 2
+
+updates:
+  # ─── Python (uv.lock per package) ──────────────────────────
+  - package-ecosystem: pip
+    directory: "/libs/core-py"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels: [dependencies, area:core-py]
+
+  - package-ecosystem: pip
+    directory: "/libs/storage"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels: [dependencies, area:storage]
+
+  - package-ecosystem: pip
+    directory: "/libs/obs-py"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels: [dependencies, area:obs-py]
+
+  - package-ecosystem: pip
+    directory: "/libs/schemas"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels: [dependencies, area:schemas]
+
+  # ─── GitHub Actions ────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: [dependencies, area:ci]
+
+  # ─── Docker (base images of compose / Dockerfiles) ─────────
+  - package-ecosystem: docker
+    directory: "/docker/images"
+    schedule:
+      interval: weekly
+    labels: [dependencies, area:docker]

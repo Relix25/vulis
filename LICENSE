@@ -1,0 +1,95 @@
+Business Source License 1.1
+
+Parameters
+
+Licensor:             Vulis Project Contributors
+Licensed Work:        Vulis — Industrial Vision Platform
+                     (the software in this repository, including all source
+                     code, configuration files, scripts, and documentation,
+                     except third-party components identified in the NOTICE
+                     file which are governed by their respective licenses)
+Licensed Work Date:   2026-06-14
+Change Date:          2030-06-14
+Change License:       GNU Affero General Public License v3.0 only (AGPL-3.0-only)
+
+For information about commercial or alternative licensing of the Licensed
+Work, contact the Licensor at: https://github.com/vulis/vulis#contact or
+open an issue in the project repository.
+
+----------------------------------------------------------------------
+
+Business Source License 1.1
+
+License text copyright (c) 2017 MariaDB Corporation Ab, All Rights Reserved.
+"Business Source License" is a trademark of MariaDB Corporation Ab.
+
+Business Source License (BSL) 1.1 is a source-available license designed to
+allow software to transition to an open source license. A Licensor may use
+the BSL to make the Licensed Work available under the conditions set forth
+below and to set the date and Change License under which the Licensed Work
+will be made available as open source.
+
+-----------------------------------------------------------------------------
+
+Terms
+
+The Licensor hereby grants you the right to copy, modify, create derivative
+works, redistribute, and make non-production use of the Licensed Work. The
+Licensor may make an Additional Use Grant, if applicable, which grants
+additional permissions. Any use of the Licensed Work beyond the rights
+granted under this Business Source License, or under the Additional Use
+Grant, is strictly prohibited (and a breach of this License).
+
+You may produce, use, and distribute the Licensed Work for any non-production
+use, including for internal use, research and development, evaluation, and
+testing of the Licensed Work. You may modify the Licensed Work and
+distribute modifications only under the terms of this License, including by
+distributing additional copies of this License, the Change License, or any
+Additional Use Grant, with the Licensed Work.
+
+If you use the Licensed Work for any production use, you must comply with the
+terms of any Additional Use Grant, if applicable, or obtain a commercial
+license from the Licensor.
+
+Production use of the Licensed Work is permitted for the licensee's own
+internal business purposes. Redistribution of the Licensed Work, in source or
+binary form, to third parties for their production use is not permitted
+without a commercial license. Making the Licensed Work available as a hosted
+service that competes with the Licensed Work (a Competing Use) is not
+permitted without a commercial license.
+
+Additional Use Grant: None
+
+Change Date: 2030-06-14
+
+On the Change Date, the Licensed Work will become available under the Change
+License. Until the Change Date, the Licensed Work is made available only
+under the terms of this Business Source License.
+
+Change License: GNU Affero General Public License v3.0 only (AGPL-3.0-only)
+
+By contributing to the Licensed Work, each contributor agrees that their
+contributions will be licensed under the Business Source License, and on the
+Change Date, the Change License.
+
+NO WARRANTY OF ANY KIND IS PROVIDED BY THE LICENSOR. THE LICENSED WORK IS
+PROVIDED "AS IS". EXCEPT AS REQUIRED BY APPLICABLE LAW, THE LICENSOR DOES
+NOT WARRANT THAT THE LICENSED WORK WILL BE UNINTERRUPTED, ERROR-FREE, OR
+FIT FOR ANY PARTICULAR PURPOSE. IN NO EVENT WILL THE LICENSOR BE LIABLE TO
+YOU FOR ANY DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE LICENSED
+WORK, WHETHER IN CONTRACT, TORT, OR OTHERWISE.
+
+----------------------------------------------------------------------
+
+Plain-language summary (non-binding, the BSL terms above govern):
+
+- Until 2030-06-14 (the "Change Date"), Vulis is source-available, not
+  open source.
+- You MAY: use Vulis internally at your company, including in production on
+  your own factory lines; modify it; fork it for your own use; run it for
+  research, evaluation, and testing.
+- You may NOT: resell Vulis, offer it as a hosted/SaaS product that competes
+  with Vulis, or redistribute it to third parties for production use without
+  a commercial license.
+- On 2030-06-14, Vulis automatically becomes available under the AGPL-3.0
+  license (a real open source license) for everyone, forever.

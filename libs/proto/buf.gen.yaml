@@ -1,0 +1,32 @@
+# buf.gen.yaml — code generation config for Vulis proto.
+#
+# Run:
+#   buf generate
+#
+# Generates Python (with grpc) and Go stubs. Output is committed to the
+# package so consumers don't need protoc/buf installed.
+
+version: v1
+
+plugins:
+  # ─── Python ───────────────────────────────────────────────
+  - plugin: buf.build/protocolbuffers/python
+    out: src/vulis_proto/gen/py
+    opt:
+      - paths=source_relative
+
+  - plugin: buf.build/grpc/python
+    out: src/vulis_proto/gen/py
+    opt:
+      - paths=source_relative
+
+  # ─── Go (future, when Go services exist) ─────────────────
+  # - plugin: buf.build/protocolbuffers/go
+  #   out: gen/go
+  #   opt: paths=source_relative
+  #
+  # - plugin: buf.build/grpc/go
+  #   out: gen/go
+  #   opt:
+  #     - paths=source_relative
+  #     - require_unimplemented_servers=false

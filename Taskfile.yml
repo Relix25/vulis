@@ -1,0 +1,125 @@
+version: '3'
+
+# Vulis — root Taskfile
+# Run:  task --list    (or `task -l`) to see available tasks.
+# Install Task: https://taskfile.dev/installation/
+#   Windows: winget install Task.Task
+#   macOS  : brew install go-task
+#   Linux  : sh -c "$(curl --location https://taskfile.dev/install.sh)"
+
+vars:
+  # Compose files
+  COMPOSE_DEV: docker/compose/docker-compose.dev.yml
+  # Python tooling
+  PYTHON_DIRS: libs services tools
+
+dotenv: ['.env']
+
+tasks:
+
+  # ────────────────────────── bootstrap ──────────────────────────
+  install:
+    desc: Install Python dependencies for all libs and services
+    cmds:
+      - uv sync --all-packages
+      - cmd: echo "✓ Python dependencies installed"
+        platforms: [linux, darwin, windows]
+
+  # ────────────────────────── dev stack ──────────────────────────
+  up:
+    desc: Start the local dev stack (Postgres, Mosquitto, Redis, Keycloak)
+    cmds:
+      - docker compose -f {{.COMPOSE_DEV}} up -d
+      - cmd: echo "✓ Dev stack started. Logs: task logs"
+        platforms: [linux, darwin, windows]
+
+  down:
+    desc: Stop the local dev stack
+    cmds:
+      - docker compose -f {{.COMPOSE_DEV}} down
+
+  down-v:
+    desc: Stop the dev stack AND delete volumes (destructive)
+    cmds:
+      - docker compose -f {{.COMPOSE_DEV}} down -v
+
+  logs:
+    desc: Tail dev stack logs
+    cmds:
+      - docker compose -f {{.COMPOSE_DEV}} logs -f --tail=200
+
+  ps:
+    desc: Show running dev containers
+    cmds:
+      - docker compose -f {{.COMPOSE_DEV}} ps
+
+  # ────────────────────────── quality ────────────────────────────
+  lint:
+    desc: Run ruff (lint)
+    cmds:
+      - uv run ruff check .
+
+  format:
+    desc: Run ruff (format, write)
+    cmds:
+      - uv run ruff format .
+
+  format-check:
+    desc: Run ruff (format, check only)
+    cmds:
+      - uv run ruff format --check .
+
+  typecheck:
+    desc: Run mypy on libs (strict)
+    cmds:
+      - uv run mypy libs
+
+  test:
+    desc: Run all pytest suites
+    cmds:
+      - uv run pytest
+
+  test-cov:
+    desc: Run pytest with coverage report
+    cmds:
+      - uv run pytest --cov=libs --cov-report=term --cov-report=html
+
+  reuse:
+    desc: Validate license headers with reuse
+    cmds:
+      - uv run reuse lint
+
+  check:
+    desc: Run all checks (lint + format-check + typecheck + test + reuse)
+    cmds:
+      - task: lint
+      - task: format-check
+      - task: typecheck
+      - task: test
+      - task: reuse
+      - cmd: echo "✓ All checks passed"
+        platforms: [linux, darwin, windows]
+
+  # ────────────────────────── docs ───────────────────────────────
+  docs:
+    desc: Serve MkDocs locally (http://127.0.0.1:8000)
+    cmds:
+      - uv run mkdocs serve
+
+  docs-build:
+    desc: Build the MkDocs site into ./site
+    cmds:
+      - uv run mkdocs build --strict
+
+  # ────────────────────────── git helpers ────────────────────────
+  dco-on:
+    desc: Enable automatic DCO sign-off on this repo
+    cmds:
+      - git config format.signOff true
+      - cmd: echo "✓ DCO sign-off enabled"
+        platforms: [linux, darwin, windows]
+
+  # ────────────────────────── default ────────────────────────────
+  default:
+    cmds:
+      - task --list

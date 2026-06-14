@@ -1,0 +1,25 @@
+# buf.yaml — Vulis protobuf module + lint + breaking config.
+# See: https://buf.build/docs/configuration/v1/buf-yaml/
+
+version: v1
+name: buf.build/vulis/proto
+
+modules:
+  - path: proto
+    name: vulis
+
+lint:
+  use:
+    - DEFAULT
+  except:
+    - PACKAGE_AGNOSTIC_METHODS   # methods belong to a service in a package
+  ignore_only:
+    RPC_REQUEST_RESPONSE_UNIQUE:
+      - vulis/common/v1/common.proto
+
+breaking:
+  use:
+    - FILE
+  ignore:
+    # Allow churn in v1 while in pre-1.0; revisit before tagging 1.0.
+    - vulis/**/v1/*.proto

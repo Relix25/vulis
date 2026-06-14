@@ -1,0 +1,155 @@
+// SPDX-FileCopyrightText: 2026 Vulis Project Contributors
+// SPDX-License-Identifier: LicenseRef-Vulis-BSL-1.1
+//
+// Vulis — B7 Project / Workflow service contract.
+
+syntax = "proto3";
+
+package vulis.project.v1;
+
+import "vulis/common/v1/common.proto";
+
+option go_package = "github.com/vulis/vulis/proto/vulis/project/v1;projectv1";
+
+// A Project groups everything related to one vision-inspection initiative
+// (datasets, models, deployments, campaigns).
+message Project {
+  vulis.common.v1.EntityId id = 1;
+  vulis.common.v1.EntityId tenant_id = 2;
+  string name = 3;
+  string description = 4;
+  Phase phase = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+  map<string, string> tags = 8;
+}
+
+// A physical production line, mapped to one or more edge nodes.
+message Line {
+  vulis.common.v1.EntityId id = 1;
+  vulis.common.v1.EntityId project_id = 2;
+  string name = 3;
+  // Edge node identifiers backing this line.
+  repeated vulis.common.v1.EntityId edge_ids = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// A vision task on a project (one model slot per task kind).
+message Task {
+  vulis.common.v1.EntityId id = 1;
+  vulis.common.v1.EntityId project_id = 2;
+  string name = 3;
+  vulis.common.v1.TaskKind kind = 4;
+  TaskState state = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+// ─── Enums ───────────────────────────────────────────────────
+
+enum Phase {
+  PHASE_UNSPECIFIED = 0;
+  PHASE_POC = 1;
+  PHASE_PILOT = 2;
+  PHASE_PRE_PROD = 3;
+  PHASE_PROD = 4;
+  PHASE_ARCHIVED = 5;
+}
+
+enum TaskState {
+  TASK_STATE_UNSPECIFIED = 0;
+  TASK_STATE_BACKLOG = 1;
+  TASK_STATE_IN_PROGRESS = 2;
+  TASK_STATE_IN_VALIDATION = 3;
+  TASK_STATE_DEPLOYED = 4;
+  TASK_STATE_MONITORING = 5;
+  TASK_STATE_RETRAINING = 6;
+}
+
+// ─── Service ─────────────────────────────────────────────────
+
+service ProjectService {
+  rpc CreateProject(CreateProjectRequest) returns (Project);
+  rpc GetProject(GetProjectRequest) returns (Project);
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
+  rpc UpdateProject(UpdateProjectRequest) returns (Project);
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
+
+  rpc CreateLine(CreateLineRequest) returns (Line);
+  rpc ListLines(ListLinesRequest) returns (ListLinesResponse);
+
+  rpc CreateTask(CreateTaskRequest) returns (Task);
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+  rpc TransitionTask(TransitionTaskRequest) returns (Task);
+}
+
+// ─── Requests / Responses ────────────────────────────────────
+
+message CreateProjectRequest {
+  string tenant_id = 1;
+  string name = 2;
+  string description = 3;
+  map<string, string> tags = 4;
+}
+
+message GetProjectRequest {
+  string id = 1;
+}
+
+message ListProjectsRequest {
+  string tenant_id = 1;
+  vulis.common.v1.PageRequest page = 2;
+}
+
+message ListProjectsResponse {
+  repeated Project projects = 1;
+  vulis.common.v1.PageResponse page = 2;
+}
+
+message UpdateProjectRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional Phase phase = 4;
+  map<string, string> tags = 5;
+}
+
+message DeleteProjectRequest {
+  string id = 1;
+}
+
+message DeleteProjectResponse {}
+
+message CreateLineRequest {
+  string project_id = 1;
+  string name = 2;
+  repeated string edge_ids = 3;
+}
+
+message ListLinesRequest {
+  string project_id = 1;
+}
+
+message ListLinesResponse {
+  repeated Line lines = 1;
+}
+
+message CreateTaskRequest {
+  string project_id = 1;
+  string name = 2;
+  vulis.common.v1.TaskKind kind = 3;
+}
+
+message ListTasksRequest {
+  string project_id = 1;
+}
+
+message ListTasksResponse {
+  repeated Task tasks = 1;
+}
+
+message TransitionTaskRequest {
+  string task_id = 1;
+  TaskState to = 2;
+  string reason = 3;
+}

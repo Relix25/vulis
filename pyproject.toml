@@ -1,0 +1,79 @@
+# Vulis — root project manifest (uv workspace).
+#
+# This is NOT a Python package itself; it's a uv workspace definition that
+# ties all libs together for development, plus shared dev tooling config.
+
+[project]
+name = "vulis-workspace"
+version = "0.0.0"
+description = "Vulis — Industrial Vision Platform (development workspace)."
+requires-python = ">=3.11"
+# No runtime dependencies here; each package declares its own.
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "libs/core-py",
+    "libs/storage",
+    "libs/obs-py",
+    "libs/proto",
+    "libs/schemas",
+]
+
+[tool.uv.sources]
+vulis-core-py = { workspace = true }
+vulis-storage = { workspace = true }
+vulis-obs-py = { workspace = true }
+vulis-proto = { workspace = true }
+vulis-schemas = { workspace = true }
+
+# ─── Shared dev tooling ──────────────────────────────────────
+
+[dependency-groups]
+dev = [
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "reuse>=3.0",
+    "mkdocs-material>=9.5",
+    "mkdocs-git-revision-date-localized-plugin>=1.2",
+]
+
+# ─── Ruff (root config — sub-packages inherit) ───────────────
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = [
+    "libs/proto/src/vulis_proto/gen",  # generated code
+    ".venv",
+    "site",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+# ─── mypy (root) ─────────────────────────────────────────────
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+exclude = [
+    "libs/proto/src/vulis_proto/gen",
+    "alembic/versions",
+]
+
+# ─── pytest (root — runs across the workspace) ───────────────
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["libs"]
+addopts = "-ra --strict-markers --doctest-modules=no"
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]

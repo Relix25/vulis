@@ -1,0 +1,67 @@
+# Git attributes — Vulis monorepo
+
+# Default: normalize line endings to LF in the repo, let checkout use native EOL.
+* text=auto eol=lf
+
+# Source code: enforce LF
+*.py     text eol=lf diff=python
+*.rs     text eol=lf
+*.go     text eol=lf
+*.ts     text eol=lf
+*.tsx    text eol=lf
+*.js     text eol=lf
+*.jsx    text eol=lf
+*.css    text eol=lf
+*.scss   text eol=lf
+*.html   text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.json   text eol=lf
+*.toml   text eol=lf
+*.md     text eol=lf
+*.proto  text eol=lf
+*.sh     text eol=lf
+*.sql    text eol=lf
+
+# Windows-only scripts: keep CRLF
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+*.ps1    text eol=crlf
+
+# Binary assets (never diff/merge)
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.ico    binary
+*.pdf    binary
+*.zip    binary
+*.tar    binary
+*.gz     binary
+*.7z     binary
+*.onnx   binary
+*.pt     binary
+*.pth    binary
+*.ckpt   binary
+*.safetensors binary
+*.h5     binary
+
+# Linguist / GitHub language stats: hide generated/vendor noise
+docs/**              linguist-documentation
+*.lock               linguist-generated=false
+pnpm-lock.yaml       linguist-generated=true
+uv.lock              linguist-generated=false
+Cargo.lock           linguist-generated=false
+package-lock.json    linguist-generated=true
+*_pb2.py             linguist-generated=true
+*_pb2.pyi            linguist-generated=true
+*_pb2_grpc.py        linguist-generated=true
+**/migrations/**     linguist-generated=true
+
+# Export-ignore: keep the bare-clone/mirror lightweight
+.github              export-ignore
+ADR                  export-ignore
+docs                 export-ignore
+CONTRIBUTING.md      export-ignore
+GOVERNANCE.md        export-ignore
