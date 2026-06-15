@@ -20,6 +20,7 @@ members = [
     "libs/schemas",
     "services/project-api",
     "services/dataset",
+    "services/registry",
 ]
 
 [tool.uv.sources]
@@ -30,6 +31,7 @@ vulis-proto = { workspace = true }
 vulis-schemas = { workspace = true }
 vulis-project = { workspace = true }
 vulis-dataset = { workspace = true }
+vulis-registry = { workspace = true }
 
 # ─── Shared dev tooling ──────────────────────────────────────
 
