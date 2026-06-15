@@ -11,6 +11,7 @@ resolution-markers = [
 [manifest]
 members = [
     "vulis-core-py",
+    "vulis-dataset",
     "vulis-obs-py",
     "vulis-project",
     "vulis-proto",
@@ -2122,6 +2123,58 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
     { name = "structlog", specifier = ">=24.1" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = ">=4.10" },
+]
+provides-extras = ["dev"]
+
+[[package]]
+name = "vulis-dataset"
+version = "0.1.0"
+source = { editable = "services/dataset" }
+dependencies = [
+    { name = "alembic" },
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "sqlalchemy" },
+    { name = "structlog" },
+    { name = "uvicorn", extra = ["standard"] },
+    { name = "vulis-core-py" },
+    { name = "vulis-obs-py" },
+    { name = "vulis-schemas" },
+    { name = "vulis-storage" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.13" },
+    { name = "fastapi", specifier = ">=0.111" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.1" },
+    { name = "pydantic", specifier = ">=2.6" },
+    { name = "pydantic-settings", specifier = ">=2.2" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
+    { name = "structlog", specifier = ">=24.1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+    { name = "vulis-core-py", editable = "libs/core-py" },
+    { name = "vulis-obs-py", editable = "libs/obs-py" },
+    { name = "vulis-schemas", editable = "libs/schemas" },
+    { name = "vulis-storage", editable = "libs/storage" },
 ]
 provides-extras = ["dev"]
 

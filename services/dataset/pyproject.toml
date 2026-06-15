@@ -1,0 +1,80 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vulis-dataset"
+version = "0.1.0"
+description = "Vulis dataset service — versioned, content-addressed datasets with manifest publishing and async import."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "LicenseRef-Vulis-BSL-1.1"
+license-files = ["../../LICENSE", "../../LICENSES/*.txt"]
+authors = [{ name = "Vulis Project Contributors" }]
+keywords = ["vulis", "dataset", "registry", "fastapi", "manifest"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Manufacturing",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "vulis-core-py>=0.1.0",
+    "vulis-schemas>=0.1.0",
+    "vulis-obs-py>=0.1.0",
+    "vulis-storage>=0.1.0",
+    "SQLAlchemy>=2.0",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.1",
+    "fastapi>=0.111",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "uvicorn[standard]>=0.30",
+    "structlog>=24.1",
+    "httpx>=0.27",  # TestClient transport
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/Relix25/vulis"
+Repository = "https://github.com/Relix25/vulis"
+Documentation = "https://vulis.github.io/vulis/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vulis_dataset"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+# FastAPI-isms we accept: ``Depends()`` in default args is the canonical
+# pattern; ``str, Enum`` works in Python 3.11 (UP042 is 3.12+ only);
+# forward-refs in Mapped[...] are standard SQLAlchemy 2.x style.
+per-file-ignores = { "tests/**" = ["B017"] }
+extend-ignore = [
+    "B008",   # function call in default arg (Depends, require_role, etc.)
+    "UP042",  # str-enum inheritance — works fine in 3.11
+]
+
+[tool.mypy]
+python_version = "3.11"
+# Service code is a bit more relaxed than libs (FastAPI/Starlette type
+# quirks make strict mode noisy without much benefit here).
+strict = false
+warn_unused_ignores = true
+plugins = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
